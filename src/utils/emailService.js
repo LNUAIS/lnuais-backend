@@ -7,15 +7,15 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.MAIL_USERNAME,
+        pass: process.env.MAIL_PASSWORD
     }
 });
 
 exports.sendVerificationEmail = async (email, name, code) => {
     try {
         await transporter.sendMail({
-            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            from: `"LNU AIS" <${process.env.MAIL_USERNAME}>`,
             to: email,
             subject: 'Verify Your Email - LNU AIS',
             html: verificationEmail(name, code)
@@ -29,7 +29,7 @@ exports.sendVerificationEmail = async (email, name, code) => {
 exports.sendPasswordResetEmail = async (email, name, code) => {
     try {
         await transporter.sendMail({
-            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            from: `"LNU AIS" <${process.env.MAIL_USERNAME}>`,
             to: email,
             subject: 'Password Reset Request - LNU AIS',
             html: passwordResetEmail(name, code)
@@ -43,7 +43,7 @@ exports.sendPasswordResetEmail = async (email, name, code) => {
 exports.sendWelcomeEmail = async (email, name) => {
     try {
         await transporter.sendMail({
-            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            from: `"LNU AIS" <${process.env.MAIL_USERNAME}>`,
             to: email,
             subject: 'Welcome to LNU AIS! 🎉',
             html: welcomeEmail(name)
