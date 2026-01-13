@@ -10,7 +10,9 @@ const routeAliases = {
     'GET /users/current-user': '/api/auth/current-user',
     // Specific fix for register if needed, though prompt didn't explicitly ask for it, 
     // frontend uses /users/new_member in signup.html which maps to register
-    'POST /users/new_member': '/api/users/register'
+    'POST /users/new_member': '/api/users/register',
+    // Verification alias
+    'POST /users/verify': '/api/auth/verify-email'
 };
 
 module.exports = (req, res, next) => {
