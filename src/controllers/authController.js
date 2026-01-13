@@ -192,14 +192,14 @@ exports.getCurrentUser = (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    // Return flattened structure matching frontend expectations directly
     res.json({
-        user: {
-            id: req.user.id,
-            full_name: req.user.full_name,
-            email: req.user.email,
-            programme: req.user.programme,
-            experience_level: req.user.experience_level,
-            is_verified: req.user.is_verified
-        }
+        id: req.user.id,
+        name: req.user.full_name,
+        email: req.user.email,
+        picture: req.user.picture || null, // Add if available
+        program: req.user.programme,
+        level: req.user.experience_level,
+        is_verified: req.user.is_verified
     });
 };
