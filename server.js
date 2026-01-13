@@ -19,7 +19,10 @@ app.use(cors({
     credentials: true
 }));
 
-// Routes will be added here
+const userRoutes = require('./src/routes/userRoutes');
+
+// Routes
+app.use('/api/users', userRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {
