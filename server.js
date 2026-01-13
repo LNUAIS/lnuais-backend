@@ -11,6 +11,34 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(morgan('dev'));
 app.use(express.json());
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const passport = require('./src/config/passport');
+const { sequelize } = require('./src/config/database');
+
+// Session configuration
+app.use(session({
+    store: new pgSession({
+        conObject: {
+            connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`, // Construct connection string explicitly
+        },
+        tableName: 'session',
+        createTableIfMissing: true
+    }),
+    secret: process.env.SESSION_SECRET || 'lnuais2025supersecretkeyforsessionstorage', // Fallback for dev
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(cors({
     origin: [
         'https://prod.dhplo653bqz9b.amplifyapp.com',
@@ -21,8 +49,10 @@ app.use(cors({
 }));
 
 const userRoutes = require('./src/routes/userRoutes');
+const authRoutes = require('./src/routes/authRoutes');
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
 // Health Check

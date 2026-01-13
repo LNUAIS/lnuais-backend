@@ -1,5 +1,6 @@
 const User = require('../models/User');
-const { sendWelcomeEmail } = require('../utils/emailService');
+const { sendVerificationEmail } = require('../utils/emailService');
+const bcrypt = require('bcrypt');
 
 /**
  * Register a new user
@@ -8,7 +9,7 @@ const { sendWelcomeEmail } = require('../utils/emailService');
  */
 exports.registerUser = async (req, res) => {
     try {
-        const { full_name, email, programme, experience_level } = req.body;
+        const { full_name, email, programme, experience_level, password } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email } });
@@ -16,17 +17,34 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ error: 'User already exists with this email' });
         }
 
+        // Generate 6-digit verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Hash password if provided
+        let hashedPassword = null;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        }
+
         const newUser = await User.create({
             full_name,
             email,
             programme,
-            experience_level
+            experience_level,
+            password: hashedPassword,
+            verification_code: verificationCode,
+            verification_code_expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+            is_verified: false
         });
 
-        // Send welcome email (non-blocking)
-        sendWelcomeEmail(email, full_name);
+        // Send verification email (non-blocking)
+        sendVerificationEmail(email, full_name, verificationCode);
 
-        res.status(201).json(newUser);
+        res.status(201).json({
+            message: 'Registration successful! Please check your email for the verification code.',
+            userId: newUser.id,
+            email: newUser.email
+        });
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -87,7 +105,15 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const { full_name, programme, experience_level } = req.body;
-        const user = await User.findByPk(req.params.id);
+        const userId = req.params.id;
+
+        // Authorization check: Users can only update their own profile
+        // Note: req.user is populated by Passport session
+        if (req.user && req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'You can only update your own profile' });
+        }
+
+        const user = await User.findByPk(userId);
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -113,7 +139,14 @@ exports.updateUser = async (req, res) => {
  */
 exports.deleteUser = async (req, res) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const userId = req.params.id;
+
+        // Authorization check
+        if (req.user && req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'You can only delete your own account' });
+        }
+
+        const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
