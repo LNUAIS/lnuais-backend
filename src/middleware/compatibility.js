@@ -24,8 +24,14 @@ module.exports = (req, res, next) => {
             console.log('🔄 Transforming legacy registration payload...');
 
             // Map fields
-            if (req.body.name) req.body.full_name = req.body.name;
-            if (req.body.program) req.body.programme = req.body.program;
+            if (req.body.name) {
+                req.body.full_name = req.body.name;
+                delete req.body.name;
+            }
+            if (req.body.program) {
+                req.body.programme = req.body.program;
+                delete req.body.program;
+            }
 
             // Map experience level
             const levelMap = {
@@ -33,12 +39,16 @@ module.exports = (req, res, next) => {
                 'MID': 'Intermediate',
                 'HIGH': 'Advanced'
             };
-            if (req.body.level && levelMap[req.body.level]) {
-                req.body.experience_level = levelMap[req.body.level];
-            } else if (req.body.level) {
-                // Fallback
-                req.body.experience_level = 'Beginner';
+            if (req.body.level) {
+                if (levelMap[req.body.level]) {
+                    req.body.experience_level = levelMap[req.body.level];
+                } else {
+                    req.body.experience_level = 'Beginner';
+                }
+                delete req.body.level;
             }
+
+            console.log('DEBUG Transformed Body:', JSON.stringify(req.body));
         }
     }
     next();
