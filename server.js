@@ -9,6 +9,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(cors({
+    origin: [
+        'https://prod.dhplo653bqz9b.amplifyapp.com',
+        'http://localhost:3000',
+        'http://127.0.0.1:5500',
+        'http://localhost:5000',
+        'https://lnuais-backend-env.eba-p9nw9zdb.eu-central-1.elasticbeanstalk.com'
+    ],
+    credentials: true
+}));
+
 app.use(morgan('dev'));
 app.use(express.json());
 const compatibilityMiddleware = require('./src/middleware/compatibility');
@@ -23,10 +34,10 @@ app.use(session({
     store: new pgSession({
         conObject: {
             connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-            ssl: {
+            ssl: (process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1') ? false : {
                 require: true,
                 rejectUnauthorized: false
-            } // Enable SSL for RDS connection
+            } // Enable SSL for RDS connection, disable for local
         },
         tableName: 'session',
         createTableIfMissing: true
@@ -44,15 +55,6 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.use(cors({
-    origin: [
-        'https://prod.dhplo653bqz9b.amplifyapp.com',
-        'http://localhost:3000',
-        'http://127.0.0.1:5500'
-    ],
-    credentials: true
-}));
 
 const userRoutes = require('./src/routes/userRoutes');
 const authRoutes = require('./src/routes/authRoutes');
@@ -74,6 +76,8 @@ console.log('DB_HOST:', process.env.DB_HOST);
 console.log('PORT:', process.env.PORT);
 console.log('MAIL_USERNAME:', process.env.MAIL_USERNAME);
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set ✅' : 'Missing ❌');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'Not Set (Using Fallback)');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
 
 // Database Connection and Server Start
 const startServer = async () => {

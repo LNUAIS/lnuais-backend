@@ -212,13 +212,24 @@ exports.getCurrentUser = (req, res) => {
     }
 
     // Return flattened structure matching frontend expectations directly
-    res.json({
+    const userData = {
         id: req.user.id,
         name: req.user.full_name,
         email: req.user.email,
         picture: req.user.picture || null, // Add if available
         program: req.user.programme,
         level: req.user.experience_level,
-        is_verified: req.user.is_verified
-    });
+        is_verified: req.user.is_verified,
+        has_password: !!req.user.password,
+        google_linked: !!req.user.google_id
+    };
+
+    console.log('[DEBUG] Sending getCurrentUser response:', JSON.stringify(userData));
+
+    // Prevent caching to ensure frontend gets fresh flags
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
+    res.json(userData);
 };

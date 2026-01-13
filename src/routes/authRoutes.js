@@ -12,20 +12,26 @@ router.post('/reset-password', authController.resetPassword);
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', {
-    scope: ['profile', 'email']
+    scope: ['profile', 'email'],
+    prompt: 'select_account'
 }));
 
 router.get('/google/callback',
-    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/signin.html?error=auth_failed` }), // Adjusted redirect to signin.html
+    passport.authenticate('google', {
+        failureRedirect: `${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : (process.env.FRONTEND_URL || 'http://localhost:3000')}/signin.html?error=auth_failed`
+    }),
     (req, res) => {
+        // Force localhost in development to avoid .env misconfiguration issues
+        const frontendUrl = process.env.NODE_ENV === 'development'
+            ? 'http://localhost:3000'
+            : (process.env.FRONTEND_URL || 'http://localhost:3000');
+
         // Check if profile is complete
         if (!req.user.programme || !req.user.experience_level) {
-            // Redirect to complet-profile page (or logic in dashboard)
-            // Frontend URL handling required here
-            // For now, redirect to dashboard as per prompt but noting incomplete profile
-            return res.redirect(`${process.env.FRONTEND_URL}/dashboard.html`);
+            // Append query param to trigger edit mode on dashboard
+            return res.redirect(`${frontendUrl}/dashboard.html?action=complete_profile`);
         }
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard.html`);
+        res.redirect(`${frontendUrl}/dashboard.html`);
     }
 );
 

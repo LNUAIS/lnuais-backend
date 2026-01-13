@@ -14,7 +14,14 @@ const routeAliases = {
     // Verification alias
     'POST /users/verify': '/api/auth/verify-email',
     // Profile alias
-    'GET /users/profile': '/api/auth/current-user'
+    'GET /users/profile': '/api/auth/current-user',
+    'OPTIONS /users/profile': '/api/auth/current-user',
+    // Google OAuth alias
+    'GET /oauth2/authorization/google': '/api/auth/google',
+    // Options for others
+    'OPTIONS /users/login': '/api/auth/login',
+    'OPTIONS /users/verify': '/api/auth/verify-email',
+    'OPTIONS /users/new_member': '/api/users/register'
 };
 
 module.exports = (req, res, next) => {

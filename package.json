@@ -2,7 +2,7 @@
   "name": "lnuais-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "prestart": "node -e \"require('dotenv').config(); console.log('✅ Environment loaded')\"",
     "start": "node server.js",

@@ -132,23 +132,38 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-/**
- * Delete a user
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
 exports.deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
+        const { password } = req.body;
 
         // Authorization check
-        if (req.user && req.user.id !== parseInt(userId)) {
+        if (req.user && parseInt(req.user.id) !== parseInt(userId)) {
             return res.status(403).json({ error: 'You can only delete your own account' });
         }
 
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Security: If user has a password, verify it (unless they are also Google authenticated)
+        // If user is Google linked, we trust the active session authentication as sufficient proof
+        console.log(`[DEBUG] Delete User: Password=${!!user.password}, GoogleID=${user.google_id}, BodyPass=${!!password}`);
+
+        if (user.password && !user.google_id) {
+            console.log('[DEBUG] User has password and NOT linked to Google. Verifying password...');
+            if (!password) {
+                console.warn('[DEBUG] Password missing');
+                return res.status(400).json({ error: 'Password is required to delete account' });
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                console.warn('[DEBUG] Password incorrect');
+                return res.status(401).json({ error: 'Incorrect password' });
+            }
+        } else {
+            console.log('[DEBUG] User is Google linked or has no password. Skipping verification.');
         }
 
         await user.destroy();

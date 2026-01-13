@@ -11,9 +11,9 @@ const sequelize = new Sequelize(
         dialect: 'postgres',
         logging: console.log, // Log SQL queries to console
         dialectOptions: {
-            ssl: {
+            ssl: process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1' ? false : {
                 require: true,
-                rejectUnauthorized: false // Needed for AWS RDS in some configs, verification mentions common issues
+                rejectUnauthorized: false
             }
         }
     }
