@@ -1,28 +1,55 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const { verificationEmail, passwordResetEmail, welcomeEmail } = require('./emailTemplates');
 
 const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
 
-const sendWelcomeEmail = async (userEmail, userName) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: userEmail,
-        subject: 'Welcome to LNU AIS!',
-        text: `Hi ${userName},\n\nWelcome to LNU AIS! We are excited to have you on board.\n\nBest regards,\nThe LNU AIS Team`
-    };
-
+exports.sendVerificationEmail = async (email, name, code) => {
     try {
-        await transporter.sendMail(mailOptions);
-        console.log(`Welcome email sent to ${userEmail}`);
+        await transporter.sendMail({
+            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Verify Your Email - LNU AIS',
+            html: verificationEmail(name, code)
+        });
+        console.log(`✅ Verification email sent to ${email}`);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('❌ Error sending verification email:', error);
     }
 };
 
-module.exports = { sendWelcomeEmail };
+exports.sendPasswordResetEmail = async (email, name, code) => {
+    try {
+        await transporter.sendMail({
+            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Password Reset Request - LNU AIS',
+            html: passwordResetEmail(name, code)
+        });
+        console.log(`✅ Password reset email sent to ${email}`);
+    } catch (error) {
+        console.error('❌ Error sending password reset email:', error);
+    }
+};
+
+exports.sendWelcomeEmail = async (email, name) => {
+    try {
+        await transporter.sendMail({
+            from: `"LNU AIS" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Welcome to LNU AIS! 🎉',
+            html: welcomeEmail(name)
+        });
+        console.log(`✅ Welcome email sent to ${email}`);
+    } catch (error) {
+        console.error('❌ Error sending welcome email:', error);
+    }
+};
