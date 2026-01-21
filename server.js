@@ -15,8 +15,7 @@ app.use(cors({
         'https://prod.dhplo653bqz9b.amplifyapp.com',
         'http://localhost:3000',
         'http://127.0.0.1:5500',
-        'http://localhost:5000',
-        'https://lnuais-backend-env.eba-p9nw9zdb.eu-central-1.elasticbeanstalk.com'
+        'http://localhost:5000'
     ],
     credentials: true
 }));
