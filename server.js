@@ -52,8 +52,8 @@ app.use(session({
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        secure: true, // MUST be true for sameSite: 'none'
-        sameSite: 'none' // MUST be none for cross-site (CloudFront -> Amplify)
+        secure: false, // process.env.NODE_ENV === 'production',
+        sameSite: 'lax' // Back to lax since we are now proxied as "Same Domain"
     }
 }));
 

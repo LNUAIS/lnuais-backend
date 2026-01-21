@@ -5,7 +5,8 @@ const User = require('../models/User'); // Adjusted import path as User exports 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback"
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
+    proxy: true // Trust the proxy headers (X-Forwarded-Proto) to generate HTTPS callbacks
 },
     async (accessToken, refreshToken, profile, done) => {
         try {

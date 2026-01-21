@@ -109,8 +109,13 @@ exports.updateUser = async (req, res) => {
 
         // Authorization check: Users can only update their own profile
         // Note: req.user is populated by Passport session
-        if (req.user && req.user.id !== parseInt(userId)) {
-            return res.status(403).json({ error: 'You can only update your own profile' });
+        console.log(`[DEBUG] Update User Auth Check: UserID=${req.user ? req.user.id : 'null'} (Type: ${typeof req.user.id}), TargetID=${userId} (Type: ${typeof userId})`);
+
+        if (req.user && parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({
+                error: 'You can only update your own profile',
+                details: `User ID mismatch: ${req.user.id} vs ${userId}`
+            });
         }
 
         const user = await User.findByPk(userId);

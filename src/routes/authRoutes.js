@@ -11,15 +11,27 @@ router.post('/request-password-reset', authController.requestPasswordReset);
 router.post('/reset-password', authController.resetPassword);
 
 // Google OAuth
-router.get('/google', passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account'
-}));
+router.get('/google', (req, res, next) => {
+    // Force HTTPS for the callback URL to match Google Console configuration
+    // This fixes the issue where the backend sees 'http' from the proxy but Google expects 'https'
+    // Force Callback to go to Frontend Domain (Amplify) so cookies are set on the correct domain
+    const callbackURL = 'https://prod.d2pwipsvk7jchw.amplifyapp.com/api/auth/google/callback';
+
+    passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        prompt: 'select_account',
+        callbackURL: callbackURL
+    })(req, res, next);
+});
 
 router.get('/google/callback',
-    passport.authenticate('google', {
-        failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/signin.html?error=auth_failed`
-    }),
+    (req, res, next) => {
+        const callbackURL = 'https://prod.d2pwipsvk7jchw.amplifyapp.com/api/auth/google/callback';
+        passport.authenticate('google', {
+            failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/signin.html?error=auth_failed`,
+            callbackURL: callbackURL
+        })(req, res, next);
+    },
     (req, res) => {
         // Use the environment variable for the frontend URL, fallback to localhost only if not set
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
