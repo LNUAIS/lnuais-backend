@@ -8,6 +8,8 @@ const errorHandler = require('./src/middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.enable('trust proxy'); // essential for properly handling X-Forwarded-Proto behind CloudFront/Amplify
+
 // Middleware
 app.use(cors({
     origin: [
