@@ -124,10 +124,18 @@ exports.updateUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        // Map experience_level if needed
+        let finalLevel = experience_level;
+        if (experience_level === 'LOW') finalLevel = 'Beginner';
+        if (experience_level === 'MID') finalLevel = 'Intermediate';
+        if (experience_level === 'HIGH') finalLevel = 'Advanced';
+
+        console.log(`[DEBUG] Updating user ${userId}: Programme=${programme}, Level=${experience_level} -> ${finalLevel}`);
+
         await user.update({
             full_name: full_name || user.full_name,
             programme: programme || user.programme,
-            experience_level: experience_level || user.experience_level
+            experience_level: finalLevel || user.experience_level
         });
 
         res.json(user);
