@@ -18,13 +18,11 @@ router.get('/google', passport.authenticate('google', {
 
 router.get('/google/callback',
     passport.authenticate('google', {
-        failureRedirect: `${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : (process.env.FRONTEND_URL || 'http://localhost:3000')}/signin.html?error=auth_failed`
+        failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/signin.html?error=auth_failed`
     }),
     (req, res) => {
-        // Force localhost in development to avoid .env misconfiguration issues
-        const frontendUrl = process.env.NODE_ENV === 'development'
-            ? 'http://localhost:3000'
-            : (process.env.FRONTEND_URL || 'http://localhost:3000');
+        // Use the environment variable for the frontend URL, fallback to localhost only if not set
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
         // Check if profile is complete
         if (!req.user.programme || !req.user.experience_level) {
