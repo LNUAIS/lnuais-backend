@@ -27,12 +27,10 @@ const routeAliases = {
 module.exports = (req, res, next) => {
     const key = `${req.method} ${req.path}`; // Use req.path to ignore query params
     if (routeAliases[key]) {
-        console.log(`🔄 Route alias: ${req.path} → ${routeAliases[key]}`);
-        req.url = routeAliases[key]; // Update url to new path
+        req.url = routeAliases[key];
 
         // Legacy Payload Transformation for Registration
         if (key === 'POST /users/new_member' && req.body) {
-            console.log('🔄 Transforming legacy registration payload...');
 
             // Map fields
             if (req.body.name) {
@@ -59,7 +57,6 @@ module.exports = (req, res, next) => {
                 delete req.body.level;
             }
 
-            console.log('DEBUG Transformed Body:', JSON.stringify(req.body));
         }
     }
     next();

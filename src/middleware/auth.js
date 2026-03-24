@@ -6,18 +6,23 @@ exports.requireAuth = (req, res, next) => {
 };
 
 exports.requireVerified = (req, res, next) => {
-    if (req.user && !req.user.is_verified) {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    if (!req.user.is_verified) {
         return res.status(403).json({ error: 'Email verification required' });
     }
     next();
 };
 
 exports.checkProfileComplete = (req, res, next) => {
-    if (req.user && (!req.user.programme || !req.user.experience_level)) {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    if (!req.user.programme || !req.user.experience_level) {
         return res.status(403).json({
             error: 'Profile incomplete',
-            message: 'Please complete your profile',
-            redirect: '/complete-profile'
+            message: 'Please complete your profile'
         });
     }
     next();

@@ -1,8 +1,6 @@
 const bcrypt = require('bcrypt');
-const User = require('../models/User'); // Adjusted import, User exports directly
+const User = require('../models/User');
 const { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/emailService');
-const { Op } = require('sequelize');
-
 exports.verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
@@ -96,15 +94,11 @@ exports.login = async (req, res) => {
 
         const user = await User.findOne({ where: { email } });
 
-        // Compare password even if user not found to prevent timing attacks (mock)
-        if (!user || !user.password) {
-            // If using bcrypt, you might compare against dummy hash but here checking exists first
-            return res.status(401).json({ error: 'Invalid email or password' });
-        }
+        // Always run bcrypt.compare to prevent timing attacks revealing if email exists
+        const dummyHash = '$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012';
+        const validPassword = await bcrypt.compare(password, (user && user.password) ? user.password : dummyHash);
 
-        const validPassword = await bcrypt.compare(password, user.password);
-
-        if (!validPassword) {
+        if (!user || !user.password || !validPassword) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
@@ -223,8 +217,6 @@ exports.getCurrentUser = (req, res) => {
         has_password: !!req.user.password,
         google_linked: !!req.user.google_id
     };
-
-    console.log('[DEBUG] Sending getCurrentUser response:', JSON.stringify(userData));
 
     // Prevent caching to ensure frontend gets fresh flags
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

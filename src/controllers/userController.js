@@ -37,8 +37,7 @@ exports.registerUser = async (req, res) => {
             is_verified: false
         });
 
-        // Send verification email (non-blocking)
-        sendVerificationEmail(email, full_name, verificationCode);
+        await sendVerificationEmail(email, full_name, verificationCode);
 
         res.status(201).json({
             message: 'Registration successful! Please check your email for the verification code.',
@@ -107,15 +106,8 @@ exports.updateUser = async (req, res) => {
         const { full_name, programme, experience_level } = req.body;
         const userId = req.params.id;
 
-        // Authorization check: Users can only update their own profile
-        // Note: req.user is populated by Passport session
-        console.log(`[DEBUG] Update User Auth Check: UserID=${req.user ? req.user.id : 'null'} (Type: ${typeof req.user.id}), TargetID=${userId} (Type: ${typeof userId})`);
-
-        if (req.user && parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({
-                error: 'You can only update your own profile',
-                details: `User ID mismatch: ${req.user.id} vs ${userId}`
-            });
+        if (req.user.id !== parseInt(userId)) {
+            return res.status(403).json({ error: 'You can only update your own profile' });
         }
 
         const user = await User.findByPk(userId);
@@ -129,8 +121,6 @@ exports.updateUser = async (req, res) => {
         if (experience_level === 'LOW') finalLevel = 'Beginner';
         if (experience_level === 'MID') finalLevel = 'Intermediate';
         if (experience_level === 'HIGH') finalLevel = 'Advanced';
-
-        console.log(`[DEBUG] Updating user ${userId}: Programme=${programme}, Level=${experience_level} -> ${finalLevel}`);
 
         await user.update({
             full_name: full_name || user.full_name,
@@ -150,8 +140,7 @@ exports.deleteUser = async (req, res) => {
         const userId = req.params.id;
         const { password } = req.body;
 
-        // Authorization check
-        if (req.user && parseInt(req.user.id) !== parseInt(userId)) {
+        if (req.user.id !== parseInt(userId)) {
             return res.status(403).json({ error: 'You can only delete your own account' });
         }
 
@@ -160,23 +149,15 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Security: If user has a password, verify it (unless they are also Google authenticated)
-        // If user is Google linked, we trust the active session authentication as sufficient proof
-        console.log(`[DEBUG] Delete User: Password=${!!user.password}, GoogleID=${user.google_id}, BodyPass=${!!password}`);
-
+        // Verify password for non-Google users
         if (user.password && !user.google_id) {
-            console.log('[DEBUG] User has password and NOT linked to Google. Verifying password...');
             if (!password) {
-                console.warn('[DEBUG] Password missing');
                 return res.status(400).json({ error: 'Password is required to delete account' });
             }
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
-                console.warn('[DEBUG] Password incorrect');
                 return res.status(401).json({ error: 'Incorrect password' });
             }
-        } else {
-            console.log('[DEBUG] User is Google linked or has no password. Skipping verification.');
         }
 
         await user.destroy();

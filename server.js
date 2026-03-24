@@ -11,18 +11,17 @@ const PORT = process.env.PORT || 5000;
 app.enable('trust proxy'); // essential for properly handling X-Forwarded-Proto behind CloudFront/Amplify
 
 // Middleware
-app.use(cors({
-    origin: [
-        'https://prod.dy1i4sfv0u39q.amplifyapp.com', // Old one
-        'https://prod.d2pwipsvk7jchw.amplifyapp.com', // Your Amplify domain
-        'https://lnuais.com',                        // New Custom Domain
-        'https://www.lnuais.com',                    // New Custom Domain (www)
-        'https://prod.dhplo653bqz9b.amplifyapp.com',
-        'https://dgzvl0b4x5nn2.cloudfront.net',      // CloudFront domain
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : [
+        'https://lnuais.com',
+        'https://www.lnuais.com',
         'http://localhost:3000',
-        'http://127.0.0.1:5500',
         'http://localhost:5000'
-    ],
+    ];
+
+app.use(cors({
+    origin: allowedOrigins,
     credentials: true
 }));
 
@@ -54,8 +53,8 @@ app.use(session({
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        secure: false, // process.env.NODE_ENV === 'production',
-        sameSite: 'lax' // Back to lax since we are now proxied as "Same Domain"
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
     }
 }));
 
@@ -77,13 +76,14 @@ app.get('/api/health', (req, res) => {
 // Error Handler
 app.use(errorHandler);
 
-console.log('Environment check:');
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('PORT:', process.env.PORT);
-console.log('MAIL_USERNAME:', process.env.MAIL_USERNAME);
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set ✅' : 'Missing ❌');
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'Not Set (Using Fallback)');
-console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+if (process.env.NODE_ENV !== 'production') {
+    console.log('Environment check:');
+    console.log('DB_HOST:', process.env.DB_HOST);
+    console.log('PORT:', process.env.PORT);
+    console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Missing');
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'Not Set (Using Fallback)');
+    console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+}
 
 // Database Connection and Server Start
 const startServer = async () => {

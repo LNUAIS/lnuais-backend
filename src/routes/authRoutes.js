@@ -11,7 +11,6 @@ router.post('/request-password-reset', authController.requestPasswordReset);
 router.post('/reset-password', authController.resetPassword);
 
 // Google OAuth
-// Google OAuth
 router.get('/google', (req, res, next) => {
     // Dynamic Callback URL for multiple domains (Amplify + Custom Domain)
     const host = req.headers.host;
